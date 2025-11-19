@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from "sonner";
 import { Eye, Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import CandidateManager from "./CandidateManager";
 
 interface Candidate {
   id: string;
@@ -135,10 +136,13 @@ export default function CandidatesView() {
               <CardTitle>Candidates</CardTitle>
               <CardDescription>View all candidate submissions and results</CardDescription>
             </div>
-            <Button onClick={exportToCSV} variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Export CSV
-            </Button>
+            <div className="flex gap-2">
+              <CandidateManager onCandidateCreated={fetchCandidates} />
+              <Button onClick={exportToCSV} variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Export CSV
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

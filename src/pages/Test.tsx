@@ -118,21 +118,22 @@ export default function Test() {
     }
   };
 
-  const handleNext = async () => {
-    if (selectedAnswer === null) {
-      toast.error("Please select an answer");
-      return;
-    }
-
+  const handleAnswerSelect = async (value: string) => {
+    const answerValue = parseInt(value);
+    setSelectedAnswer(answerValue);
+    
     const currentQuestion = questions[currentIndex];
-    await saveResponse(currentQuestion.id, selectedAnswer, currentQuestion.direction);
-
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setSelectedAnswer(responses[questions[currentIndex + 1].id] || null);
-    } else {
-      handleSubmit();
-    }
+    await saveResponse(currentQuestion.id, answerValue, currentQuestion.direction);
+    
+    // Auto-advance after a short delay
+    setTimeout(() => {
+      if (currentIndex < questions.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+        setSelectedAnswer(null); // Clear selection for next question
+      } else {
+        handleSubmit();
+      }
+    }, 300);
   };
 
   const handleSubmit = async () => {
@@ -216,7 +217,7 @@ export default function Test() {
           <CardContent className="space-y-6">
             <RadioGroup
               value={selectedAnswer?.toString()}
-              onValueChange={(value) => setSelectedAnswer(parseInt(value))}
+              onValueChange={handleAnswerSelect}
             >
               <div className="space-y-3">
                 {likertOptions.map((option) => (
@@ -232,25 +233,6 @@ export default function Test() {
                 ))}
               </div>
             </RadioGroup>
-
-            <div className="flex justify-end">
-              <Button
-                onClick={handleNext}
-                disabled={selectedAnswer === null || submitting}
-                size="lg"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
-                  </>
-                ) : currentIndex < questions.length - 1 ? (
-                  "Next Question"
-                ) : (
-                  "Submit Test"
-                )}
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>
