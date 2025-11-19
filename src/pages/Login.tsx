@@ -16,8 +16,10 @@ const loginSchema = z.object({
 export default function Login() {
   const [regno, setRegno] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,18 +34,34 @@ export default function Login() {
       }
     }
 
+    if (isSignUp && !name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+
     setLoading(true);
 
     // Convert regno to email format
     const email = `${regno}@ace.test`;
     
-    const { error } = await signIn(email, password);
-
-    if (error) {
-      toast.error("Invalid credentials. Please check your register number and password.");
+    if (isSignUp) {
+      const { error } = await signUp(email, password, name, regno);
+      
+      if (error) {
+        toast.error(error.message || "Failed to create account");
+      } else {
+        toast.success("Account created successfully!");
+        navigate("/test");
+      }
     } else {
-      toast.success("Login successful!");
-      navigate("/test");
+      const { error } = await signIn(email, password);
+
+      if (error) {
+        toast.error("Invalid credentials. Please check your register number and password.");
+      } else {
+        toast.success("Login successful!");
+        navigate("/test");
+      }
     }
 
     setLoading(false);
@@ -58,13 +76,31 @@ export default function Login() {
               <span className="text-2xl font-bold text-primary-foreground">ACE</span>
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            {isSignUp ? "Create Account" : "Welcome Back"}
+          </CardTitle>
           <CardDescription>
-            Enter your credentials to access the behavior analysis test
+            {isSignUp 
+              ? "Register to access the behavior analysis test"
+              : "Enter your credentials to access the behavior analysis test"
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="regno">Register Number</Label>
               <Input
@@ -88,8 +124,17 @@ export default function Login() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? (isSignUp ? "Creating account..." : "Signing in...") : (isSignUp ? "Create Account" : "Sign In")}
             </Button>
+            <div className="text-center text-sm">
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-primary hover:underline"
+              >
+                {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Create one"}
+              </button>
+            </div>
           </form>
         </CardContent>
       </Card>
