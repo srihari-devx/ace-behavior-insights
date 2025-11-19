@@ -54,13 +54,18 @@ export default function Login() {
         navigate("/test");
       }
     } else {
-      const { error } = await signIn(email, password);
+      const { error, role } = await signIn(email, password);
 
       if (error) {
         toast.error("Invalid credentials. Please check your register number and password.");
       } else {
         toast.success("Login successful!");
-        navigate("/test");
+        // Redirect based on role
+        if (role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/test");
+        }
       }
     }
 
@@ -77,30 +82,28 @@ export default function Login() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">
-            {isSignUp ? "Create Account" : "Welcome Back"}
+            {isSignUp ? "Create Account" : "Candidate Login"}
           </CardTitle>
           <CardDescription>
             {isSignUp 
               ? "Register to access the behavior analysis test"
-              : "Enter your credentials to access the behavior analysis test"
+              : "Enter your register number and password to access the test"
             }
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Enter your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="regno">Register Number</Label>
               <Input
@@ -124,16 +127,10 @@ export default function Login() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (isSignUp ? "Creating account..." : "Signing in...") : (isSignUp ? "Create Account" : "Sign In")}
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
-            <div className="text-center text-sm">
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-primary hover:underline"
-              >
-                {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Create one"}
-              </button>
+            <div className="text-center text-sm text-muted-foreground">
+              Default password: cand1234 (changeable by admin)
             </div>
           </form>
         </CardContent>

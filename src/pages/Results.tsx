@@ -14,11 +14,12 @@ interface TraitScore {
 }
 
 export default function Results() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut, checkUserRole } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [totalScore, setTotalScore] = useState(0);
   const [traitScores, setTraitScores] = useState<TraitScore[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -28,9 +29,15 @@ export default function Results() {
 
   useEffect(() => {
     if (user) {
+      checkRole();
       fetchResults();
     }
   }, [user]);
+
+  const checkRole = async () => {
+    const role = await checkUserRole();
+    setIsAdmin(role === "admin");
+  };
 
   const fetchResults = async () => {
     // Fetch submission
@@ -93,6 +100,33 @@ export default function Results() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show simple completion message for candidates
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4 flex items-center justify-center">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <CheckCircle2 className="h-20 w-20 text-success" />
+            </div>
+            <CardTitle className="text-3xl">Test Completed!</CardTitle>
+            <CardDescription className="text-lg">
+              Thank you for completing the behavior analysis test. Your responses have been recorded successfully.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-center text-muted-foreground">
+              It is now safe to sign out.
+            </p>
+            <Button onClick={signOut} className="w-full" size="lg">
+              Sign Out
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
