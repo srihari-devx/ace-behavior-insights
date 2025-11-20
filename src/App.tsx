@@ -10,6 +10,7 @@ const queryClient = new QueryClient();
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import Login from "./pages/Login";
+import AdminLogin from "./pages/AdminLogin";
 import Test from "./pages/Test";
 import Results from "./pages/Results";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -24,6 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/test" element={<Test />} />
             <Route path="/results" element={<Results />} />
             <Route path="/admin" element={<AdminDashboard />} />
