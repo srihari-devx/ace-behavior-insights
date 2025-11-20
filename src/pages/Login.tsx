@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
 const loginSchema = z.object({
   regno: z.string().trim().min(1, "Register number is required"),
@@ -15,10 +16,10 @@ const loginSchema = z.object({
 
 export default function Login() {
   const [regno, setRegno] = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState("cand1234");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn, signOut } = useAuth();
+  const { signIn, signUp, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,19 +43,62 @@ export default function Login() {
 
     // Convert regno to email format
     const email = `${regno}@ace.test`;
+    const defaultPassword = "cand1234";
     
-    const { error, role } = await signIn(email, password);
-
-    if (error) {
-      toast.error("Invalid credentials. Please check your register number and password.");
-    } else if (role === "admin") {
+    // First, try to sign in
+    let signInResult = await signIn(email, password);
+    
+    // If sign in fails, try to create account with provided details
+    if (signInResult.error) {
+      // Only auto-register if using default password
+      if (password === defaultPassword) {
+        const signUpResult = await signUp(email, defaultPassword, name, regno);
+        
+        if (signUpResult.error) {
+          toast.error("Unable to create account. Please try again.");
+          setLoading(false);
+          return;
+        }
+        
+        // Now sign in with the newly created account
+        signInResult = await signIn(email, defaultPassword);
+        
+        if (signInResult.error) {
+          toast.error("Account created but login failed. Please try again.");
+          setLoading(false);
+          return;
+        }
+      } else {
+        toast.error("Invalid credentials. Please use the default password (cand1234) for first login.");
+        setLoading(false);
+        return;
+      }
+    }
+    
+    // Check if user is admin
+    if (signInResult.role === "admin") {
       toast.error("Please use the admin login page.");
       await signOut();
-    } else {
-      toast.success("Login successful!");
-      navigate("/test");
+      setLoading(false);
+      return;
     }
-
+    
+    // Check if candidate already submitted test
+    const { data: existingSubmission } = await supabase
+      .from("test_submissions")
+      .select("id")
+      .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+      .maybeSingle();
+    
+    if (existingSubmission) {
+      toast.error("You have already completed the test.");
+      await signOut();
+      setLoading(false);
+      return;
+    }
+    
+    toast.success("Login successful!");
+    navigate("/test");
     setLoading(false);
   };
 
