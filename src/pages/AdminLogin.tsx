@@ -13,12 +13,11 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-export default function Login() {
+export default function AdminLogin() {
   const [regno, setRegno] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn, signOut } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,26 +32,19 @@ export default function Login() {
       }
     }
 
-    if (!name.trim()) {
-      toast.error("Name is required");
-      return;
-    }
-
     setLoading(true);
 
-    // Convert regno to email format
     const email = `${regno}@ace.test`;
-    
     const { error, role } = await signIn(email, password);
 
     if (error) {
-      toast.error("Invalid credentials. Please check your register number and password.");
-    } else if (role === "admin") {
-      toast.error("Please use the admin login page.");
-      await signOut();
+      toast.error("Invalid admin credentials.");
+    } else if (role !== "admin") {
+      toast.error("Access denied. Admin privileges required.");
+      await useAuth().signOut;
     } else {
-      toast.success("Login successful!");
-      navigate("/test");
+      toast.success("Admin login successful!");
+      navigate("/admin");
     }
 
     setLoading(false);
@@ -67,30 +59,19 @@ export default function Login() {
               <span className="text-2xl font-bold text-primary-foreground">ACE</span>
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Candidate Login</CardTitle>
+          <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
           <CardDescription>
-            Enter your register number, name, and password to access the test
+            Enter your admin credentials to access the dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Enter your full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="regno">Register Number</Label>
+              <Label htmlFor="regno">Admin Register Number</Label>
               <Input
                 id="regno"
                 type="text"
-                placeholder="Enter your register number"
+                placeholder="Enter admin register number"
                 value={regno}
                 onChange={(e) => setRegno(e.target.value)}
                 required
@@ -101,18 +82,15 @@ export default function Login() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Enter admin password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Signing in..." : "Admin Sign In"}
             </Button>
-            <div className="text-center text-sm text-muted-foreground">
-              Default password: cand1234 (changeable by admin)
-            </div>
           </form>
         </CardContent>
       </Card>
